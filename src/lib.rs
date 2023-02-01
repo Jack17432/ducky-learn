@@ -5,6 +5,7 @@
 extern crate ndarray;
 
 pub mod layers;
+// TODO: create a util module with one hot encoding in it
 
 #[cfg(test)]
 mod layers_tests {
