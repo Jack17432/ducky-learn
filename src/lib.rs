@@ -1,14 +1,64 @@
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
-}
+#![allow(dead_code)]
+
+pub mod layers;
 
 #[cfg(test)]
-mod tests {
-    use super::*;
+mod layers_tests {
+    use ndarray::*;
+    use super::layers::*;
 
     #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
+    fn dense1d_pass_arr1_1() {
+        let layer = Dense1d::from(
+            |x| x,
+            arr2(&[[1., 1., 1.], [1., 1., 1.], [1., 1., 1.]]),
+            arr1(&[1., 1., 1.]),
+        );
+        let input_array = arr1(&[1., 1., 1.]);
+
+        assert_eq!(
+            layer.pass(input_array),
+            arr1(&[4., 4., 4.])
+        )
+    }
+
+    #[test]
+    fn dense1d_pass_arr1_2() {
+        let layer = Dense1d::from(
+            |x| x,
+            arr2(&[
+                [1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.],
+                [1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.],
+                [1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.]
+            ]),
+            arr1(&[
+                1., 1., 1.
+            ]),
+        );
+        let input_array = arr1(&[
+            1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.,
+        ]);
+
+        assert_eq!(
+            layer.pass(input_array),
+            arr1(&[
+                13.0, 13.0, 13.0
+            ])
+        )
+    }
+
+    #[test]
+    #[should_panic]
+    fn dense1d_pass_arr1_diff_size() {
+        let layer = Dense1d::from(
+            |x| x,
+            arr2(&[[1., 1., 1., 1.], [1., 1., 1., 1.]]),
+            arr1(&[0., 0.]),
+        );
+        let input_array = arr1(&[1.]);
+
+        layer.pass(input_array);
     }
 }
+
+
