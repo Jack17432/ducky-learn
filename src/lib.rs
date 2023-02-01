@@ -1,4 +1,8 @@
 #![allow(dead_code)]
+#![doc(html_logo_url = "https://img.freepik.com/free-icon/rubber-duck_318-763202.jpg?w=2000")]
+
+
+extern crate ndarray;
 
 pub mod layers;
 
