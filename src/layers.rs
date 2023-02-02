@@ -1,5 +1,9 @@
 extern crate ndarray;
+extern crate ndarray_rand;
+
 use ndarray::prelude::*;
+use ndarray_rand::RandomExt;
+use ndarray_rand::rand_distr::Uniform;
 
 pub trait FeedForward1d {
     /// Feeds forward the 1d array through the layer.
@@ -56,7 +60,6 @@ impl Dense1d {
     ///                 arr2(&[[1., 1.], [1., 1.]]), // 2x2 array
     ///                 arr1(&[1., 1.]) // len 2
     ///             );
-    ///
     /// ```
     pub fn from(
         activation: fn(Array1<f64>) -> Array1<f64>,
@@ -70,7 +73,43 @@ impl Dense1d {
         }
     }
 
-    // TODO: Create a new constructor that inits a random set of nodes based off of input sizes.
+    /// Create randomly set weights and bias's for the dense1d layer.
+    /// Creates weights and bias's using a normal distribution from -1. -> 1.
+    ///
+    /// # Arguments
+    ///
+    /// * `input_size`: size of input array
+    /// * `layer_size`: number of nodes in the layer
+    /// * `activation_fn`: activation function for the layer
+    ///
+    /// returns: `Dense1d`
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ducky_learn::layers::*;
+    /// use ndarray::{arr1, arr2};
+    ///
+    /// let layer = Dense1d::new(5, 10, |x| x);
+    /// let input_array = arr1(&[
+    ///     1., 1., 1., 1., 1.
+    /// ]);
+    ///
+    /// layer.pass(input_array);
+    /// ```
+    pub fn new(
+        input_size: usize,
+        layer_size: usize,
+        activation_fn: fn(Array1<f64>) -> Array1<f64>
+    ) -> Self {
+        Self {
+            activation: activation_fn,
+            weights: Array2::random((layer_size, input_size),
+                                    Uniform::new(-1., 1.)),
+            bias: Array1::random(layer_size,
+                                 Uniform::new(-1., 1.))
+        }
+    }
 }
 
 impl FeedForward1d for Dense1d {

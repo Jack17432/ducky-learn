@@ -15,3 +15,4 @@ mnist = "0.5.0"
 
 [dependencies]
 ndarray = "0.15.6"
+ndarray-rand = "0.14.0"

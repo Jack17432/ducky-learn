@@ -66,6 +66,18 @@ mod layers_tests {
 
         layer.pass(input_array);
     }
+
+
+    #[test]
+    fn dense1d_new() {
+        let layer = Dense1d::new(5, 10, |x| x);
+
+        let input_array = arr1(&[
+            1., 1., 1., 1., 1.
+        ]);
+
+        layer.pass(input_array);
+    }
 }
 
 #[cfg(test)]
