@@ -6,6 +6,8 @@ extern crate ndarray;
 
 pub mod layers;
 pub mod util;
+// TODO: Create a training mod
+// TODO: Create a back prop mod
 
 #[cfg(test)]
 mod layers_tests {

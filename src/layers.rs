@@ -69,6 +69,8 @@ impl Dense1d {
             bias
         }
     }
+
+    // TODO: Create a new constructor that inits a random set of nodes based off of input sizes.
 }
 
 impl FeedForward1d for Dense1d {
