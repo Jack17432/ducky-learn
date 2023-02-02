@@ -5,7 +5,7 @@
 extern crate ndarray;
 
 pub mod layers;
-// TODO: create a util module with one hot encoding in it
+pub mod util;
 
 #[cfg(test)]
 mod layers_tests {
@@ -66,4 +66,27 @@ mod layers_tests {
     }
 }
 
+#[cfg(test)]
+mod util_tests {
+    use ndarray::*;
+    use super::util::*;
+
+    #[test]
+    fn one_hot_encoding_vec_std_use() {
+        let input_array = vec![3., 1., 0.];
+        let output_test_array = arr2(
+            &[[0., 0., 0., 1.], [0., 1., 0., 0.], [1., 0., 0., 0.]]
+        );
+
+        assert_eq!(one_hot_encoding_vec(&input_array, 3), output_test_array);
+    }
+
+    #[test]
+    fn one_hot_encoding_vec_zero_input() {
+        let input_array = vec![];
+        let output_test_array = Array2::zeros((0, 0));
+
+        assert_eq!(one_hot_encoding_vec(&input_array, 0), output_test_array);
+    }
+}
 

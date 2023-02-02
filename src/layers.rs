@@ -1,5 +1,4 @@
 extern crate ndarray;
-
 use ndarray::prelude::*;
 
 pub trait FeedForward1d {
@@ -76,7 +75,7 @@ impl FeedForward1d for Dense1d {
     fn pass(&self, input_array: Array1<f64>) -> Array1<f64> {
         assert_eq!(self.weights.shape()[1], input_array.shape()[0],
             "Layer input size is {}, \
-            given shape is size of {}",
+            Layer was given size of {}",
             self.weights.shape()[1], input_array.shape()[0]
         );
 
