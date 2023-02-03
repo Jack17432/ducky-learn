@@ -120,6 +120,6 @@ impl FeedForward1d for Dense1d {
             self.weights.shape()[1], input_array.shape()[0]
         );
 
-        self.weights.dot(&input_array) + &self.bias
+        (self.activation)(self.weights.dot(&input_array) + &self.bias)
     }
 }

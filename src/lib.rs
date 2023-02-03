@@ -7,13 +7,14 @@ extern crate ndarray;
 pub mod layers;
 pub mod util;
 pub mod activations;
-// TODO: Create a training mod
-// TODO: Create a back prop mod
+pub mod optimizers;
+pub mod train;
 
 #[cfg(test)]
 mod layers_tests {
     use ndarray::*;
     use super::layers::*;
+    use super::activations::*;
 
     #[test]
     fn dense1d_pass_arr1_1() {
@@ -75,6 +76,21 @@ mod layers_tests {
         ]);
 
         layer.pass(input_array);
+    }
+
+    #[test]
+    fn dense1d_activation() {
+        let layer = Dense1d::from(
+            relu_1d,
+            arr2(&[[1., 1., 1.], [1., 1., 1.], [1., 1., 1.]]),
+            arr1(&[-10., -10., 1.]),
+        );
+        let input_array = arr1(&[1., 1., 1.]);
+
+        assert_eq!(
+            layer.pass(input_array),
+            arr1(&[0., 0., 4.])
+        )
     }
 }
 
