@@ -1,11 +1,12 @@
 extern crate ndarray;
 extern crate ndarray_rand;
 
+use std::sync::RwLock;
 use ndarray::prelude::*;
 use ndarray_rand::RandomExt;
 use ndarray_rand::rand_distr::Uniform;
 
-pub trait FeedForward1d {
+pub trait Layer1d {
     /// Feeds forward the 1d array through the layer.
     ///
     /// # Arguments
@@ -22,6 +23,7 @@ pub trait FeedForward1d {
     ///
     /// let layer = Dense1d::from(
     ///                 |x| x, // Activation function that is does nothing
+    ///                 |x| x.map(|i| 1f64), // Derivative of Activation function
     ///                 arr2(&[[1., 1.], [1., 1.]]), // 2x2 array
     ///                 arr1(&[1., 1.]) // len 2
     ///             );
@@ -29,13 +31,14 @@ pub trait FeedForward1d {
     /// let output = layer.pass(arr1(&[1., 1.]));
     ///
     /// ```
-    fn pass(&self, input_array: Array1<f64>) -> Array1<f64>;
+    fn pass(&self, input_array: Array1<f64>) -> (Array1<f64>, Array1<f64>);  // TODO: update doc
 }
 
 pub struct Dense1d {
     activation: fn(Array1<f64>) -> Array1<f64>,
-    weights: Array2<f64>,
-    bias: Array1<f64>
+    deriv_activation: fn(Array1<f64>) -> Array1<f64>,
+    weights: RwLock<Array2<f64>>,
+    bias: RwLock<Array1<f64>>
 }
 
 impl Dense1d {
@@ -57,19 +60,22 @@ impl Dense1d {
     ///
     /// let layer = Dense1d::from(
     ///                 |x| x, // Activation function that is does nothing
+    ///                 |x| x.map(|i| 1f64), // Derivative of Activation function
     ///                 arr2(&[[1., 1.], [1., 1.]]), // 2x2 array
     ///                 arr1(&[1., 1.]) // len 2
     ///             );
     /// ```
     pub fn from(
         activation: fn(Array1<f64>) -> Array1<f64>,
+        deriv_activation: fn(Array1<f64>) -> Array1<f64>,
         weights: Array2<f64>,
         bias: Array1<f64>,
     ) -> Self {
         Self {
             activation,
-            weights,
-            bias
+            deriv_activation,
+            weights: RwLock::new(weights),
+            bias: RwLock::new(bias)
         }
     }
 
@@ -90,7 +96,7 @@ impl Dense1d {
     /// use ducky_learn::layers::*;
     /// use ndarray::{arr1, arr2};
     ///
-    /// let layer = Dense1d::new(5, 10, |x| x);
+    /// let layer = Dense1d::new(5, 10, |x| x, |x| x);
     /// let input_array = arr1(&[
     ///     1., 1., 1., 1., 1.
     /// ]);
@@ -100,26 +106,33 @@ impl Dense1d {
     pub fn new(
         input_size: usize,
         layer_size: usize,
-        activation_fn: fn(Array1<f64>) -> Array1<f64>
+        activation_fn: fn(Array1<f64>) -> Array1<f64>,
+        deriv_activation_fn: fn(Array1<f64>) -> Array1<f64>
     ) -> Self {
         Self {
             activation: activation_fn,
-            weights: Array2::random((layer_size, input_size),
-                                    Uniform::new(-1., 1.)),
-            bias: Array1::random(layer_size,
-                                 Uniform::new(-1., 1.))
+            deriv_activation: deriv_activation_fn,
+            weights: RwLock::new(Array2::random((layer_size, input_size),
+                                    Uniform::new(-1., 1.))),
+            bias: RwLock::new(Array1::random(layer_size,
+                                 Uniform::new(-1., 1.)))
         }
     }
 }
 
-impl FeedForward1d for Dense1d {
-    fn pass(&self, input_array: Array1<f64>) -> Array1<f64> {
-        assert_eq!(self.weights.shape()[1], input_array.shape()[0],
+impl Layer1d for Dense1d {
+    fn pass(&self, input_array: Array1<f64>) -> (Array1<f64>, Array1<f64>) {
+        let weights = self.weights.read().unwrap();
+        let bias = self.bias.read().unwrap();
+
+        assert_eq!(weights.shape()[1], input_array.shape()[0],
             "Layer input size is {}, \
             Layer was given size of {}",
-            self.weights.shape()[1], input_array.shape()[0]
+                   weights.shape()[1], input_array.shape()[0]
         );
 
-        (self.activation)(self.weights.dot(&input_array) + &self.bias)
+        let z = weights.dot(&input_array) + &*bias;
+        let a = (self.activation)(z.clone());
+        (z, a)
     }
 }

@@ -25,6 +25,27 @@ pub fn relu_1d(input_array: Array1<f64>) -> Array1<f64> {
     input_array.map(|value| value.max(0.))
 }
 
+/// Derivative of Relu function
+///
+/// # Arguments
+///
+/// * `input_array`: 1d array
+///
+/// returns: `Array1<f64>`
+///
+/// # Examples
+///
+/// ```
+/// use ducky_learn::activations::*;
+/// use ndarray::arr1;
+///
+/// let input_array = arr1(&[1.3456435325242, -32145324321., 132432888.]);
+/// assert_eq!(deriv_relu_1d(input_array), arr1(&[1., 0., 1.]));
+/// ```
+pub fn deriv_relu_1d(input_array: Array1<f64>) -> Array1<f64> {
+    input_array.map(|value| (*value > 0f64) as i32 as f64)
+}
+
 /// Softmax activation function for 1d array. Note that you can run into NaN issue if values are
 /// < -1000 or > 1000 (https://users.rust-lang.org/t/watch-out-for-nans/70016)
 ///
