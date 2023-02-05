@@ -1,5 +1,6 @@
 // TODO: Create Readme.md file for project
 #![allow(dead_code)]
+#![allow(unused)]
 #![doc(html_logo_url = "https://img.freepik.com/free-icon/rubber-duck_318-763202.jpg?w=2000")]
 
 
@@ -207,16 +208,68 @@ mod train_tests {
     use super::train::*;
 
     #[test]
-    fn train_pass_1() {
+    fn forwards_pass_1() {
+        let model = vec![
+            Dense1d::new(1, 3, relu_1d, deriv_relu_1d),
+            Dense1d::new(3, 5, relu_1d, deriv_relu_1d),
+            Dense1d::new(5, 10, softmax_1d, deriv_relu_1d),
+        ];
+
+        let (weights_bias_vec, activation_vec) = forward_pass(
+            &model,
+            arr1(&[1.]),
+        );
+
+        assert_eq!(weights_bias_vec.len() , 3);
+        assert_eq!(activation_vec.len(), 3)
+    }
+
+    #[test]
+    fn forwards_pass_2() {
         let model = vec![
             Dense1d::new(5, 5, relu_1d, deriv_relu_1d),
             Dense1d::new(5, 5, relu_1d, deriv_relu_1d),
             Dense1d::new(5, 5, softmax_1d, deriv_relu_1d),
         ];
 
-        train_pass(
-            model,
+        let (weights_bias_vec, activation_vec) = forward_pass(
+            &model,
             arr1(&[1., 2., 0.2, 1., 0.32]),
+        );
+
+        assert_eq!(weights_bias_vec.first().unwrap().shape(), [5]);
+        assert_eq!(activation_vec.first().unwrap().shape(), [5])
+    }
+
+    #[test]
+    fn forwards_pass_3() {
+        let model = vec![
+            Dense1d::new(5, 3, relu_1d, deriv_relu_1d),
+            Dense1d::new(3, 5, relu_1d, deriv_relu_1d),
+            Dense1d::new(5, 10, softmax_1d, deriv_relu_1d),
+        ];
+
+        let (weights_bias_vec, activation_vec) = forward_pass(
+            &model,
+            arr1(&[1., 2., 0.2, 1., 0.32]),
+        );
+
+        assert_eq!(weights_bias_vec.last().unwrap().shape(), [10]);
+        assert_eq!(activation_vec.last().unwrap().shape(), [10])
+    }
+
+
+    #[test]
+    #[should_panic]
+    fn forwards_pass_4() {
+        let model = vec![
+            Dense1d::new(5, 3, relu_1d, deriv_relu_1d),
+            Dense1d::new(4, 5, relu_1d, deriv_relu_1d),
+            Dense1d::new(5, 10, softmax_1d, deriv_relu_1d),
+        ];
+
+        let (weights_bias_vec, activation_vec) = forward_pass(
+            &model,
             arr1(&[1., 2., 0.2, 1., 0.32]),
         );
     }
