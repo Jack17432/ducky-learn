@@ -68,9 +68,7 @@ pub fn deriv_relu_1d(input_array: Array1<f64>) -> Array1<f64> {
 ///            arr1(&[0.16663753690463112, 0.4529677885070323, 0.0613025239546613, 0.16831227199301688, 0.15077987864065834]));
 /// ```
 pub fn softmax_1d(input_array: Array1<f64>) -> Array1<f64> {
-    let sum_exp_input_array = input_array
-        .map(|value| value.exp())
-        .sum();
+    let sum_exp_input_array = input_array.map(|value| value.exp()).sum();
 
     input_array.map(|value| value.exp() / sum_exp_input_array)
 }

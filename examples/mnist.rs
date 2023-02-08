@@ -1,21 +1,25 @@
 // use ducky_learn::layers::*;
+use ducky_learn::util::one_hot_encoding_vec;
 use mnist::*;
 use ndarray::prelude::*;
-use ducky_learn::util::one_hot_encoding_vec;
 
 fn main() {
-     let (
-         _train_data, _train_labels,
-         _test_data, _test_labels,
-         _val_data, _val_labels
-     ) = create_mnist_dataset(50_000, 10_000, 10_000);
+    let (_train_data, _train_labels, _test_data, _test_labels, _val_data, _val_labels) =
+        create_mnist_dataset(50_000, 10_000, 10_000);
 }
 
-fn create_mnist_dataset(trn_len: u32, tst_len: u32, val_len: u32) -> (
-    Array2<f64>, Array2<f64>,   // Training data, label
-    Array2<f64>, Array2<f64>,   // Testing data, label
-    Array2<f64>, Array2<f64>    // Validation data, label
-){
+fn create_mnist_dataset(
+    trn_len: u32,
+    tst_len: u32,
+    val_len: u32,
+) -> (
+    Array2<f64>,
+    Array2<f64>, // Training data, label
+    Array2<f64>,
+    Array2<f64>, // Testing data, label
+    Array2<f64>,
+    Array2<f64>, // Validation data, label
+) {
     let Mnist {
         trn_img,
         trn_lbl,
@@ -50,5 +54,12 @@ fn create_mnist_dataset(trn_len: u32, tst_len: u32, val_len: u32) -> (
     let val_lbl: Vec<usize> = val_lbl.iter().map(|x| *x as usize).collect();
     let val_labels: Array2<f64> = one_hot_encoding_vec(&val_lbl, 9);
 
-    (train_data, train_labels, test_data, test_labels, val_data, val_labels)
+    (
+        train_data,
+        train_labels,
+        test_data,
+        test_labels,
+        val_data,
+        val_labels,
+    )
 }

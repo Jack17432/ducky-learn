@@ -1,12 +1,15 @@
-use std::iter::zip;
-use ndarray::{arr1, Array1, Array2};
 use super::layers::*;
+use ndarray::{arr1, Array1, Array2};
+use std::iter::zip;
 
-pub fn train<L>(model: &Vec<L>,
-                train_data: Array2<f64>, train_lbl: Array2<f64>,
-                test_data: Array2<f64>, test_lbl: Array2<f64>)
-where
-    L: Layer1d
+pub fn train<L>(
+    model: &Vec<L>,
+    train_data: Array2<f64>,
+    train_lbl: Array2<f64>,
+    test_data: Array2<f64>,
+    test_lbl: Array2<f64>,
+) where
+    L: Layer1d,
 {
     todo!()
 }
@@ -14,7 +17,7 @@ where
 //noinspection RsBorrowChecker For some reason it says that the item is moved eventhough it isn't
 pub fn forward_pass<L>(model: &Vec<L>, data: Array1<f64>) -> (Vec<Array1<f64>>, Vec<Array1<f64>>)
 where
-    L: Layer1d
+    L: Layer1d,
 {
     let mut weights_bias_vec: Vec<Array1<f64>> = Vec::with_capacity(model.len());
     let mut activation_vec: Vec<Array1<f64>> = Vec::with_capacity(model.len());
@@ -30,4 +33,15 @@ where
     }
 
     (weights_bias_vec, activation_vec)
+}
+
+pub fn back_propagation<L>(
+    model: &Vec<L>,
+    weights_bias_vec: Vec<Array1<f64>>,
+    activation_vec: Vec<Array1<f64>>,
+    target_out: Array1<f64>,
+) where
+    L: Layer1d,
+{
+    todo!()
 }

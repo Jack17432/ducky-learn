@@ -1,10 +1,10 @@
 extern crate ndarray;
 extern crate ndarray_rand;
 
-use std::sync::RwLock;
 use ndarray::prelude::*;
-use ndarray_rand::RandomExt;
 use ndarray_rand::rand_distr::Uniform;
+use ndarray_rand::RandomExt;
+use std::sync::RwLock;
 
 pub trait Layer1d {
     /// Feeds forward the 1d array through the layer.
@@ -31,14 +31,14 @@ pub trait Layer1d {
     /// let output = layer.pass(arr1(&[1., 1.]));
     ///
     /// ```
-    fn pass(&self, input_array: Array1<f64>) -> (Array1<f64>, Array1<f64>);  // TODO: update doc
+    fn pass(&self, input_array: Array1<f64>) -> (Array1<f64>, Array1<f64>); // TODO: update doc
 }
 
 pub struct Dense1d {
     activation: fn(Array1<f64>) -> Array1<f64>,
     deriv_activation: fn(Array1<f64>) -> Array1<f64>,
     weights: RwLock<Array2<f64>>,
-    bias: RwLock<Array1<f64>>
+    bias: RwLock<Array1<f64>>,
 }
 
 impl Dense1d {
@@ -75,7 +75,7 @@ impl Dense1d {
             activation,
             deriv_activation,
             weights: RwLock::new(weights),
-            bias: RwLock::new(bias)
+            bias: RwLock::new(bias),
         }
     }
 
@@ -107,15 +107,16 @@ impl Dense1d {
         input_size: usize,
         layer_size: usize,
         activation_fn: fn(Array1<f64>) -> Array1<f64>,
-        deriv_activation_fn: fn(Array1<f64>) -> Array1<f64>
+        deriv_activation_fn: fn(Array1<f64>) -> Array1<f64>,
     ) -> Self {
         Self {
             activation: activation_fn,
             deriv_activation: deriv_activation_fn,
-            weights: RwLock::new(Array2::random((layer_size, input_size),
-                                    Uniform::new(-1., 1.))),
-            bias: RwLock::new(Array1::random(layer_size,
-                                 Uniform::new(-1., 1.)))
+            weights: RwLock::new(Array2::random(
+                (layer_size, input_size),
+                Uniform::new(-1., 1.),
+            )),
+            bias: RwLock::new(Array1::random(layer_size, Uniform::new(-1., 1.))),
         }
     }
 }
@@ -125,10 +126,13 @@ impl Layer1d for Dense1d {
         let weights = self.weights.read().unwrap();
         let bias = self.bias.read().unwrap();
 
-        assert_eq!(weights.shape()[1], input_array.shape()[0],
+        assert_eq!(
+            weights.shape()[1],
+            input_array.shape()[0],
             "Layer input size is {}, \
             Layer was given size of {}",
-                   weights.shape()[1], input_array.shape()[0]
+            weights.shape()[1],
+            input_array.shape()[0]
         );
 
         let z = weights.dot(&input_array) + &*bias;
