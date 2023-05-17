@@ -88,23 +88,34 @@ mod layers_tests {
 #[cfg(test)]
 mod util_tests {
     use super::util::*;
-    use ndarray::*;
+    use ndarray::Array2;
+    use ndarray::array;
 
     #[test]
-    fn one_hot_encoding_vec_std_use() {
-        let input_array = vec![3, 1, 0];
-        let output_test_array = arr2(&[[0., 0., 0., 1.], [0., 1., 0., 0.], [1., 0., 0., 0.]]);
-
-        assert_eq!(one_hot_encoding_vec(&input_array, 3), output_test_array);
+    fn test_empty() {
+        let input: Vec<usize> = vec![];
+        assert!(one_hot_encoding_vec(input).is_err());
     }
 
     #[test]
-    fn one_hot_encoding_vec_zero_input() {
-        let input_array = vec![];
-        let output_test_array = Array2::zeros((0, 0));
-
-        assert_eq!(one_hot_encoding_vec(&input_array, 0), output_test_array);
+    fn test_single_element() {
+        let input: Vec<usize> = vec![0];
+        let expected: Array2<f64> = array![[1.]];
+        assert_eq!(one_hot_encoding_vec(input).unwrap(), expected);
     }
+
+    #[test]
+    fn test_multiple_elements() {
+        let input: Vec<usize> = vec![0, 2, 1, 3];
+        let expected: Array2<f64> = array![
+            [1., 0., 0., 0.],
+            [0., 0., 1., 0.],
+            [0., 1., 0., 0.],
+            [0., 0., 0., 1.]
+        ];
+        assert_eq!(one_hot_encoding_vec(input).unwrap(), expected);
+    }
+
 }
 
 #[cfg(test)]

@@ -1,44 +1,54 @@
 extern crate ndarray;
 
-use ndarray::prelude::*;
+use ndarray::Array2;
+use std::error::Error;
 
-/// one hot encoding for a vector of integers.
+/// Generates a one-hot encoding for a vector of integers.
 ///
 /// # Arguments
 ///
-/// * `input_array`: List of cats that are integers
-/// * `max_val`: make value that the input array will contain or the size of the one hot encoding
+/// * `input_array`: List of integers to be encoded. Each integer should be less than or equal to the maximum integer in the array.
 ///
-/// returns: `Array2<f64>`
+/// Returns: `Array2<f64>` where each row represents the one-hot encoding of the corresponding integer from the input array. The columns represent the range of integers from the input array.
+///
+/// # Errors
+///
+/// Returns an error if the `input_array` is empty.
 ///
 /// # Examples
 ///
 /// ```
-/// use ducky_learn::util::one_hot_encoding_vec;
+/// use ducky_learn::one_hot_encoding_vec;
 /// use ndarray::prelude::*;
 ///
-/// let input_array = vec![3, 1, 0];
-/// let output_array = arr2(
-///     &[[0., 0., 0., 1.], [0., 1., 0., 0.], [1., 0., 0., 0.]]
-/// );
+/// let input_array = vec![2, 0, 1];
+/// let output_array = array![
+///     [0., 0., 1.],
+///     [1., 0., 0.],
+///     [0., 1., 0.]
+/// ];
 ///
-/// assert_eq!(one_hot_encoding_vec(&input_array, 0), output_array);
+/// assert_eq!(one_hot_encoding_vec(input_array).unwrap(), output_array);
 /// ```
-pub fn one_hot_encoding_vec(input_array: &Vec<usize>, max_val: u32) -> Array2<f64> {
-    let mut encoding_array: Vec<Vec<f64>> = vec![vec![0.]; input_array.len()];
+pub fn one_hot_encoding_vec<T: AsRef<[usize]>>(input_array: T) -> Result<Array2<f64>, Box<dyn Error>> {
+    let input_array = input_array.as_ref();
+    let max_val = match input_array.iter().max() {
+        Some(&max) => max + 1,
+        None => return Err("Empty input array".into()),
+    };
 
-    for (idx, input_value) in input_array.iter().enumerate() {
-        encoding_array[idx] = vec![0.; max_val as usize];
-        encoding_array[idx].insert(*input_value, 1.);
+    let mut encoding_array: Vec<Vec<f64>> = Vec::with_capacity(input_array.len());
+
+    for &input_value in input_array {
+        let mut row = vec![0.; max_val];
+        row[input_value] = 1.;
+        encoding_array.push(row);
     }
 
-    let n_col = encoding_array.first().map_or(0, |row| row.len());
+    let data: Vec<f64> = encoding_array.into_iter().flatten().collect();
     let n_row = input_array.len();
+    let n_col = max_val;
 
-    let mut data = Vec::new();
-    for encoding_row in &encoding_array {
-        data.extend_from_slice(encoding_row);
-    }
-
-    Array2::from_shape_vec((n_row, n_col), data).unwrap()
+    Array2::from_shape_vec((n_row, n_col), data).map_err(|err| err.into())
 }
+

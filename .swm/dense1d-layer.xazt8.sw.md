@@ -1,7 +1,7 @@
 ---
 id: xazt8
 title: Dense1d Layer
-file_version: 1.1.1
+file_version: 1.1.2
 app_version: 1.1.0
 ---
 
