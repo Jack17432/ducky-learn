@@ -2,8 +2,7 @@ name: Cargo Publish
 
 on:
   push:
-    branches:
-      - main  # trigger the action when you push to the main branch
+    branches: [ "master" ]
 
 env:
   CARGO_TERM_COLOR: always
