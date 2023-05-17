@@ -63,12 +63,12 @@ mod naive_bayes_tests {
 
         let x_test: Vec<Vec<f64>> = vec![
             vec![1.5, 2.5, 3.5, 1.5, 2.5],
-            vec![4.5, 4.5, 5.5, 4.5, 4.5],
+            vec![5.5, 4.5, 5.5, 4.5, 4.5],
         ];
 
         let predictions = model.predict(&x_test);
 
-        assert_eq!(predictions, vec!["class1", "class1"]);
+        assert_eq!(predictions, vec!["class1", "class2"]);
     }
 
 }
