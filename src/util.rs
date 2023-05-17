@@ -18,7 +18,7 @@ use std::error::Error;
 /// # Examples
 ///
 /// ```
-/// use ducky_learn::one_hot_encoding_vec;
+/// use ducky_learn::util::one_hot_encoding_vec;
 /// use ndarray::prelude::*;
 ///
 /// let input_array = vec![2, 0, 1];
