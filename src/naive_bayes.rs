@@ -1,11 +1,6 @@
 use std::collections::HashMap;
 use std::collections::HashSet;
-
-/// Marker struct indicating a `StdNaiveBayes` that has not been fit.
-pub struct Unfit;
-
-/// Marker struct indicating a `StdNaiveBayes` that has been fit.
-pub struct Fit;
+use super::util::{Fit, Unfit};
 
 /// Implementation of a standard Naive Bayes classifier.
 ///

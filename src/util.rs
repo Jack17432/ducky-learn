@@ -3,6 +3,12 @@ extern crate ndarray;
 use ndarray::Array2;
 use std::error::Error;
 
+/// Marker struct indicating a model that has not been fit.
+pub struct Unfit;
+
+/// Marker struct indicating a model that has been fit.
+pub struct Fit;
+
 /// Generates a one-hot encoding for a vector of integers.
 ///
 /// # Arguments
