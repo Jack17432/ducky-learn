@@ -11,6 +11,67 @@ pub mod layers;
 pub mod optimizers;
 pub mod train;
 pub mod util;
+pub mod naive_bayes;
+
+#[cfg(test)]
+mod naive_bayes_tests {
+    use super::naive_bayes::StdNaiveBayes;
+
+    #[test]
+    fn test_fit() {
+        let mut model = StdNaiveBayes::new(1.0);
+
+        let x: Vec<Vec<f64>> = vec![
+            vec![1.0, 2.0, 3.0],
+            vec![2.0, 3.0, 1.0],
+            vec![3.0, 1.0, 2.0],
+        ];
+
+        let y: Vec<String> = vec![
+            "class1".to_string(),
+            "class2".to_string(),
+            "class1".to_string(),
+        ];
+
+        let model = model.fit(&x, &y);
+
+        assert!((model.probability_of_class.get("class1").unwrap() - 2.0/3.0).abs() < 1e-9);
+        assert!((model.probability_of_class.get("class2").unwrap() - 1.0/3.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn test_predict() {
+        let mut model = StdNaiveBayes::new(1.0);
+
+        let x: Vec<Vec<f64>> = vec![
+            vec![1.0, 2.0, 3.0, 1.0, 2.0],
+            vec![2.0, 3.0, 4.0, 2.0, 3.0],
+            vec![4.0, 4.0, 5.0, 4.0, 4.0],
+            vec![5.0, 5.0, 6.0, 5.0, 5.0],
+            vec![1.0, 1.0, 1.0, 1.0, 1.0],
+        ];
+
+        let y: Vec<String> = vec![
+            "class1".to_string(),
+            "class1".to_string(),
+            "class2".to_string(),
+            "class2".to_string(),
+            "class1".to_string(),
+        ];
+
+        let model = model.fit(&x, &y);
+
+        let x_test: Vec<Vec<f64>> = vec![
+            vec![1.5, 2.5, 3.5, 1.5, 2.5],
+            vec![5.5, 4.5, 5.5, 4.5, 4.5],
+        ];
+
+        let predictions = model.predict(&x_test);
+
+        assert_eq!(predictions, vec!["class1", "class2"]);
+    }
+
+}
 
 #[cfg(test)]
 mod layers_tests {
