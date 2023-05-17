@@ -1,24 +1,50 @@
 use std::collections::HashMap;
 use std::collections::HashSet;
 
-struct Unfit;
-struct Fit;
+/// Marker struct indicating a `StdNaiveBayes` that has not been fit.
+pub struct Unfit;
 
-/// `StdNaiveBayes` is a struct for a standard implementation of a Naive Bayes classifier.
+/// Marker struct indicating a `StdNaiveBayes` that has been fit.
+pub struct Fit;
+
+/// Implementation of a standard Naive Bayes classifier.
 ///
-/// # Fields
-/// * `alpha`: A smoothing parameter to prevent zero probabilities.
-/// * `probability_of_class`: A HashMap that stores the probability of each class.
-/// * `probability_of_feat_by_class`: A nested HashMap that stores the probability of each feature given the class.
+/// This classifier uses Laplace smoothing, the degree of which can be controlled with the `alpha` parameter.
 ///
-/// # Examples
+/// # Parameters
+/// - `alpha`: The Laplace smoothing factor.
+/// - `probability_of_class`: HashMap storing the probabilities of each class.
+/// - `probability_of_feat_by_class`: HashMap storing the probabilities of each feature given a class.
+/// - `state`: PhantomData indicating whether the classifier has been fit.
+///
+/// # Type parameters
+/// - `State`: Indicates whether the classifier has been fit. Can either be `Fit` or `Unfit`.
+///
+/// # Example
+///
 /// ```
 /// use ducky_learn::naive_bayes::StdNaiveBayes;
 ///
-/// let mut classifier = StdNaiveBayes::new(1.0);
-/// classifier.fit(&x_train, &y_train);
-/// let predictions = classifier.predict(&x_test);
+/// // Define train and test data
+/// let x_train: Vec<Vec<f64>> = vec![
+///     vec![1.0, 2.0, 3.0],
+///     vec![2.0, 3.0, 4.0],
+///     vec![3.0, 4.0, 5.0],
+/// ];
+/// let y_train: Vec<String> = vec!["class1".to_string(), "class2".to_string(), "class1".to_string()];
+///
+/// let x_test: Vec<Vec<f64>> = vec![
+///     vec![1.5, 2.5, 3.5],
+///     vec![2.5, 3.5, 4.5],
+/// ];
+///
+/// let mut nb = StdNaiveBayes::new(1.0);
+/// let nb = nb.fit(&x_train, &y_train);
+/// let y_pred = nb.predict(&x_test);
+///
+/// // y_pred will hold the predicted classes for x_test
 /// ```
+
 #[derive(Debug)]
 pub struct StdNaiveBayes<State = Unfit> {
     pub alpha: f64,
@@ -28,32 +54,34 @@ pub struct StdNaiveBayes<State = Unfit> {
     state: std::marker::PhantomData<State>,
 }
 
-
 impl StdNaiveBayes {
-    /// Creates a new instance of `StdNaiveBayes` with given smoothing parameter `alpha`.
+
+    /// Constructs a new, unfitted `StdNaiveBayes` classifier with a specified alpha value.
     ///
-    /// # Arguments
-    /// * `alpha`: A f64 value for the smoothing parameter.
+    /// # Parameters
+    /// - `alpha`: The Laplace smoothing factor.
     ///
     /// # Returns
-    /// An instance of `StdNaiveBayes`.
+    /// A new `StdNaiveBayes` instance.
     pub fn new(alpha: f64) -> Self {
         Self {
             alpha,
             probability_of_class: HashMap::new(),
             probability_of_feat_by_class: HashMap::new(),
+
+            state: Default::default(),
         }
     }
 
-    /// Trains the Naive Bayes model using the provided training data.
+    /// Fits the `StdNaiveBayes` classifier to the training data.
     ///
-    /// # Arguments
-    /// * `x`: A reference to a 2D vector of f64 representing the features of the training data.
-    /// * `y`: A reference to a vector of Strings representing the labels of the training data.
+    /// # Parameters
+    /// - `x`: The training data.
+    /// - `y`: The target values.
     ///
-    /// # Panics
-    /// This method will panic if the length of `x` and `y` do not match.
-    pub fn fit(&mut self, x: &Vec<Vec<f64>>, y: &Vec<String>) {
+    /// # Returns
+    /// The fitted `StdNaiveBayes` classifier.
+    pub fn fit(mut self, x: &Vec<Vec<f64>>, y: &Vec<String>) -> StdNaiveBayes<Fit> {
         let mut y_counts: HashMap<String, i32> = HashMap::new();
         for class in y {
             let counter = y_counts.entry(class.to_string()).or_insert(0);
@@ -85,18 +113,29 @@ impl StdNaiveBayes {
 
             self.probability_of_feat_by_class.insert(uniq_class.to_string(), class_feat_probs);
         }
-    }
 
-    /// Predicts the labels of the given data using the trained Naive Bayes model.
+        StdNaiveBayes{
+            alpha: self.alpha,
+            probability_of_class: self.probability_of_class.clone(),
+            probability_of_feat_by_class: self.probability_of_feat_by_class.clone(),
+
+            state: std::marker::PhantomData::<Fit>,
+        }
+    }
+}
+
+impl StdNaiveBayes<Fit> {
+
+    /// Predicts the target values for the given data.
     ///
-    /// # Arguments
-    /// * `x`: A reference to a 2D vector of f64 representing the features of the data to be classified.
+    /// # Parameters
+    /// - `x`: The data to predict target values for.
     ///
     /// # Returns
-    /// A vector of Strings representing the predicted labels for the given data.
+    /// The predicted target values.
     ///
     /// # Panics
-    /// This method will panic if the model has not been trained before calling `predict`.
+    /// This function will panic if the classifier has not been fit.
     pub fn predict(&self, x: &Vec<Vec<f64>>) -> Vec<String> {
         let mut y_pred: Vec<String> = Vec::new();
         let unique_classes: Vec<String> = self.probability_of_class.keys().cloned().collect();

@@ -33,7 +33,7 @@ mod naive_bayes_tests {
             "class1".to_string(),
         ];
 
-        model.fit(&x, &y);
+        let model = model.fit(&x, &y);
 
         assert!((model.probability_of_class.get("class1").unwrap() - 2.0/3.0).abs() < 1e-9);
         assert!((model.probability_of_class.get("class2").unwrap() - 1.0/3.0).abs() < 1e-9);
@@ -59,7 +59,7 @@ mod naive_bayes_tests {
             "class1".to_string(),
         ];
 
-        model.fit(&x, &y);
+        let model = model.fit(&x, &y);
 
         let x_test: Vec<Vec<f64>> = vec![
             vec![1.5, 2.5, 3.5, 1.5, 2.5],
