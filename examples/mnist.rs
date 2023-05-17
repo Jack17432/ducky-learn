@@ -38,21 +38,21 @@ fn create_mnist_dataset(
         .map(|x| *x as f64 / 256.);
 
     let trn_lbl: Vec<usize> = trn_lbl.iter().map(|x| *x as usize).collect();
-    let train_labels: Array2<f64> = one_hot_encoding_vec(&trn_lbl, 9);
+    let train_labels: Array2<f64> = one_hot_encoding_vec(&trn_lbl).unwrap();
 
     let test_data = Array2::from_shape_vec((10_000, 784), tst_img)
         .expect("Error converting images to Array2 struct")
         .map(|x| *x as f64 / 256.);
 
     let tst_lbl: Vec<usize> = tst_lbl.iter().map(|x| *x as usize).collect();
-    let test_labels: Array2<f64> = one_hot_encoding_vec(&tst_lbl, 9);
+    let test_labels: Array2<f64> = one_hot_encoding_vec(&tst_lbl).unwrap();
 
     let val_data = Array2::from_shape_vec((10_000, 784), val_img)
         .expect("Error converting images to Array2 struct")
         .map(|x| *x as f64 / 256.);
 
     let val_lbl: Vec<usize> = val_lbl.iter().map(|x| *x as usize).collect();
-    let val_labels: Array2<f64> = one_hot_encoding_vec(&val_lbl, 9);
+    let val_labels: Array2<f64> = one_hot_encoding_vec(&val_lbl).unwrap();
 
     (
         train_data,
