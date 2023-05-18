@@ -1,4 +1,3 @@
-// TODO: Create Readme.md file for project
 #![allow(dead_code)]
 #![allow(unused)]
 #![doc(html_logo_url = "https://img.freepik.com/free-icon/rubber-duck_318-763202.jpg?w=2000")]

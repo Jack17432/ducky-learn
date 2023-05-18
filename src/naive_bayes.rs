@@ -1,5 +1,4 @@
-use std::collections::HashMap;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use super::util::{Fit, Unfit};
 
 /// Implementation of a standard Naive Bayes classifier.
@@ -196,35 +195,150 @@ impl GaussianNaiveBayes {
 
 fn calculate_class_probability(uniq_classes: &Vec<String>, all_classes: &Vec<String>) -> HashMap<String, f64> {
     let mut class_probability: HashMap<String, f64> = HashMap::new();
-    let total = uniq_classes.len() as f64;
+    let total = all_classes.len() as f64;
 
-    for class in uniq_classes.iter() {
-        let class_count: f64 = all_classes.iter()
-            .filter(|&x| x == class)
-            .count() as f64;
-        class_probability.insert(class.clone(), class_count);
+    let mut class_counts: HashMap<&String, f64> = HashMap::new();
+
+    // Calculate the counts for each class in one pass
+    for class in all_classes {
+        *class_counts.entry(class).or_insert(0.0) += 1.0;
     }
 
-    class_probability
+    // For each unique class, compute and store the probability
+    uniq_classes.iter().map(|class| {
+        let count = *class_counts.get(class).unwrap_or(&0.0);
+        (class.clone(), count / total)
+    }).collect()
 }
 
-fn calculate_feature_probability(x: &Vec<Vec<f64>>, y: &Vec<String>, uniq_classes: &Vec<String>) -> HashMap<String, (f64, f64)> {
-    let mut return_feature_prob: HashMap<String, (f64, f64)> = HashMap::new();
+fn calculate_feature_probability(x: &Vec<Vec<f64>>, y: &Vec<String>, uniq_classes: &Vec<String>) -> HashMap<String, Vec<(f64, f64)>> {
+    let mut return_feature_prob: HashMap<String, Vec<(f64, f64)>> = HashMap::new();
 
-    for class in uniq_classes.iter() {
-        let x_class: Vec<Vec<f64>> = x.clone()
-            .into_iter().zip(y.iter())
-            .filter_map(|(x, y)| match y {
-                class => Some(x),
-                _ => None
-            })
+    if x.len() != y.len() {
+        return HashMap::new();
+    }
+
+    for class in uniq_classes {
+        let x_class: Vec<_> = x.iter().zip(y)
+            .filter_map(|(x, y)| if y == class {Some(x.clone())} else {None})
             .collect();
 
-        // TODO: Implement mean and standard deviation calculation
-        let feat_mean: Vec<f64>;
+        if x_class.is_empty() {
+            continue;
+        }
 
-        let feat_stds: Vec<f64>;
+        let num_features = x_class[0].len();
+
+        for i in 0..num_features {
+            let feature_values: Vec<_> = x_class.iter().map(|features| features[i]).collect();
+
+            // calculate the mean
+            let mean: f64 = feature_values.iter().sum::<f64>() / feature_values.len() as f64;
+
+            // calculate the standard deviation
+            let variance: f64 = feature_values.iter().map(|value| {
+                let diff = mean - *value;
+                diff * diff
+            }).sum::<f64>() / feature_values.len() as f64;
+
+            let std_dev = variance.sqrt();
+
+            return_feature_prob.entry(class.to_string()).or_insert_with(|| Vec::with_capacity(num_features)).push((mean, std_dev));
+        }
     }
 
     return_feature_prob
+}
+
+#[cfg(test)]
+mod calculation_functions_tests {
+    use super::*;
+
+    #[test]
+    fn test_calculate_class_probability() {
+        let uniq_classes = vec!["class1".to_string(), "class2".to_string(), "class3".to_string()];
+        let all_classes = vec!["class1".to_string(), "class2".to_string(), "class2".to_string(),
+                               "class3".to_string(), "class3".to_string(), "class3".to_string()];
+        let probabilities = calculate_class_probability(&uniq_classes, &all_classes);
+
+        assert!(probabilities.get("class1").unwrap() - (1.0/6.0) < f64::EPSILON);
+        assert!(probabilities.get("class2").unwrap() - (2.0/6.0) < f64::EPSILON);
+        assert!(probabilities.get("class3").unwrap() - (3.0/6.0) < f64::EPSILON);
+    }
+
+    #[test]
+    fn test_calculate_class_probability_sum_to_one() {
+        let uniq_classes = vec!["class1".to_string(), "class2".to_string(), "class3".to_string()];
+        let all_classes = vec!["class1".to_string(), "class2".to_string(), "class2".to_string(),
+                               "class3".to_string(), "class3".to_string(), "class3".to_string()];
+        let probabilities = calculate_class_probability(&uniq_classes, &all_classes);
+
+        let sum: f64 = probabilities.values().sum();
+
+        assert!(1.0 - sum < f64::EPSILON);
+    }
+
+    #[test]
+    fn test_calculate_feature_probability() {
+        let uniq_classes = vec!["class1".to_string(), "class2".to_string()];
+        let y = vec!["class1".to_string(), "class2".to_string(), "class1".to_string(), "class2".to_string()];
+        let x = vec![vec![1.0, 2.0], vec![2.0, 2.0], vec![2.0, 3.0], vec![3.0, 3.0]];
+
+        let feature_probabilities = calculate_feature_probability(&x, &y, &uniq_classes);
+
+        let class1_probabilities = feature_probabilities.get("class1").unwrap();
+        assert!((class1_probabilities[0].0 - 1.5).abs() < f64::EPSILON);
+        assert!((class1_probabilities[0].1 - 0.5).abs() < f64::EPSILON);
+        assert!((class1_probabilities[1].0 - 2.5).abs() < f64::EPSILON);
+        assert!((class1_probabilities[1].1 - 0.5).abs() < f64::EPSILON);
+
+        let class2_probabilities = feature_probabilities.get("class2").unwrap();
+        assert!((class2_probabilities[0].0 - 2.5).abs() < f64::EPSILON);
+        assert!((class2_probabilities[0].1 - 0.5).abs() < f64::EPSILON);
+        assert!((class2_probabilities[1].0 - 2.5).abs() < f64::EPSILON);
+        assert!((class2_probabilities[1].1 - 0.5).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn test_calculate_feature_probability_no_data() {
+        let uniq_classes = vec!["class1".to_string(), "class2".to_string()];
+        let y = vec![];
+        let x = vec![];
+
+        let feature_probabilities = calculate_feature_probability(&x, &y, &uniq_classes);
+
+        assert!(feature_probabilities.is_empty());
+    }
+
+    #[test]
+    fn test_calculate_feature_probability_same_feature_values() {
+        let uniq_classes = vec!["class1".to_string(), "class2".to_string()];
+        let y = vec!["class1".to_string(), "class1".to_string(), "class2".to_string(), "class2".to_string()];
+        let x = vec![vec![2.0, 2.0], vec![2.0, 2.0], vec![2.0, 2.0], vec![2.0, 2.0]];
+
+        let feature_probabilities = calculate_feature_probability(&x, &y, &uniq_classes);
+
+        let class1_probabilities = feature_probabilities.get("class1").unwrap();
+        assert!((class1_probabilities[0].0 - 2.0).abs() < f64::EPSILON);
+        assert!((class1_probabilities[0].1 - 0.0).abs() < f64::EPSILON);
+        assert!((class1_probabilities[1].0 - 2.0).abs() < f64::EPSILON);
+        assert!((class1_probabilities[1].1 - 0.0).abs() < f64::EPSILON);
+
+        let class2_probabilities = feature_probabilities.get("class2").unwrap();
+        assert!((class2_probabilities[0].0 - 2.0).abs() < f64::EPSILON);
+        assert!((class2_probabilities[0].1 - 0.0).abs() < f64::EPSILON);
+        assert!((class2_probabilities[1].0 - 2.0).abs() < f64::EPSILON);
+        assert!((class2_probabilities[1].1 - 0.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn test_calculate_feature_probability_mismatched_lengths() {
+        let uniq_classes = vec!["class1".to_string(), "class2".to_string()];
+        let y = vec!["class1".to_string(), "class2".to_string()];
+        let x = vec![];
+
+        let feature_probabilities = calculate_feature_probability(&x, &y, &uniq_classes);
+
+        assert!(feature_probabilities.is_empty());
+    }
 }
