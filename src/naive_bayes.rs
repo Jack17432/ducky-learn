@@ -39,7 +39,6 @@ use super::util::{Fit, Unfit};
 ///
 /// // y_pred will hold the predicted classes for x_test
 /// ```
-
 #[derive(Debug)]
 pub struct StdNaiveBayes<State = Unfit> {
     pub alpha: f64,
@@ -61,8 +60,8 @@ impl StdNaiveBayes {
     pub fn new(alpha: f64) -> Self {
         Self {
             alpha,
-            probability_of_class: HashMap::new(),
-            probability_of_feat_by_class: HashMap::new(),
+            probability_of_class: Default::default(),
+            probability_of_feat_by_class: Default::default(),
 
             state: Default::default(),
         }
@@ -156,4 +155,76 @@ impl StdNaiveBayes<Fit> {
 
         y_pred
     }
+}
+
+
+pub struct GaussianNaiveBayes<State = Unfit> {
+    pub classes: Vec<String>,
+    pub probability_of_class: HashMap<String, f64>,
+    pub probability_of_feat_by_class: HashMap<String, (f64, f64)>,
+
+    state: std::marker::PhantomData<State>,
+}
+
+impl GaussianNaiveBayes {
+    pub fn new() -> Self {
+        Self {
+            classes: Default::default(),
+            probability_of_class: Default::default(),
+            probability_of_feat_by_class: Default::default(),
+
+            state: Default::default(),
+        }
+    }
+
+    pub fn fit(mut self, x: &Vec<Vec<f64>>, y: &Vec<String>) -> GaussianNaiveBayes<Fit> {
+        let uniq_classes: Vec<String> = y.clone()
+            .into_iter().collect::<HashSet<String>>()
+            .into_iter().collect::<Vec<String>>();
+
+        let fit_model = GaussianNaiveBayes{
+            classes: uniq_classes.clone(),
+            probability_of_class: calculate_class_probability(&uniq_classes, y),
+            probability_of_feat_by_class: self.probability_of_feat_by_class.clone(),
+
+            state: std::marker::PhantomData::<Fit>,
+        };
+
+        fit_model
+    }
+}
+
+fn calculate_class_probability(uniq_classes: &Vec<String>, all_classes: &Vec<String>) -> HashMap<String, f64> {
+    let mut class_probability: HashMap<String, f64> = HashMap::new();
+    let total = uniq_classes.len() as f64;
+
+    for class in uniq_classes.iter() {
+        let class_count: f64 = all_classes.iter()
+            .filter(|&x| x == class)
+            .count() as f64;
+        class_probability.insert(class.clone(), class_count);
+    }
+
+    class_probability
+}
+
+fn calculate_feature_probability(x: &Vec<Vec<f64>>, y: &Vec<String>, uniq_classes: &Vec<String>) -> HashMap<String, (f64, f64)> {
+    let mut return_feature_prob: HashMap<String, (f64, f64)> = HashMap::new();
+
+    for class in uniq_classes.iter() {
+        let x_class: Vec<Vec<f64>> = x.clone()
+            .into_iter().zip(y.iter())
+            .filter_map(|(x, y)| match y {
+                class => Some(x),
+                _ => None
+            })
+            .collect();
+
+        // TODO: Implement mean and standard deviation calculation
+        let feat_mean: Vec<f64>;
+
+        let feat_stds: Vec<f64>;
+    }
+
+    return_feature_prob
 }
