@@ -160,7 +160,7 @@ impl StdNaiveBayes<Fit> {
 pub struct GaussianNaiveBayes<State = Unfit> {
     pub classes: Vec<String>,
     pub probability_of_class: HashMap<String, f64>,
-    pub probability_of_feat_by_class: HashMap<String, (f64, f64)>,
+    pub probability_of_feat_by_class: HashMap<String, Vec<(f64, f64)>>,
 
     state: std::marker::PhantomData<State>,
 }
@@ -181,16 +181,64 @@ impl GaussianNaiveBayes {
             .into_iter().collect::<HashSet<String>>()
             .into_iter().collect::<Vec<String>>();
 
-        let fit_model = GaussianNaiveBayes{
-            classes: uniq_classes.clone(),
+        GaussianNaiveBayes{
             probability_of_class: calculate_class_probability(&uniq_classes, y),
-            probability_of_feat_by_class: self.probability_of_feat_by_class.clone(),
+            probability_of_feat_by_class: calculate_feature_probability(x, y, &uniq_classes),
+            classes: uniq_classes,
 
             state: std::marker::PhantomData::<Fit>,
-        };
-
-        fit_model
+        }
     }
+}
+
+impl GaussianNaiveBayes<Fit> {
+    pub fn predict(&self, x: &Vec<Vec<f64>>) -> Vec<String> {
+        let mut predictions: Vec<String> = Vec::new();
+
+        for data in x.iter() {
+            let mut max_prob = f64::NEG_INFINITY;
+            let mut max_class = String::from("");
+
+            for class in &self.classes {
+                let mut class_prob = self.probability_of_class.get(class).unwrap().ln();
+
+                if let Some(feature_probs) = self.probability_of_feat_by_class.get(class) {
+                    for (index, &(mean, std_dev)) in feature_probs.iter().enumerate() {
+                        let feature_value = data[index];
+                        let feature_prob = calculate_probability(feature_value, mean, std_dev);
+                        class_prob += feature_prob.ln();
+                    }
+                }
+
+                if class_prob > max_prob {
+                    max_prob = class_prob;
+                    max_class = class.clone();
+                }
+            }
+            predictions.push(max_class);
+        }
+
+        predictions
+    }
+}
+
+fn calculate_mean(data: &Vec<f64>) -> f64 {
+    let sum: f64 = data.iter().sum();
+    sum / data.len() as f64
+}
+
+fn calculate_std_dev(data: &Vec<f64>, mean: f64) -> f64 {
+    let variance: f64 = data.iter().map(|&value| {
+        let diff = value - mean;
+        diff * diff
+    }).sum::<f64>() / data.len() as f64;
+
+    variance.sqrt()
+}
+
+fn calculate_probability(x: f64, mean: f64, std_dev: f64) -> f64 {
+    let exponent = (-((x - mean).powi(2)) / (2.0 * std_dev.powi(2))).exp();
+    (1.0 / (2.0 * std::f64::consts::PI * std_dev.powi(2)).sqrt()) * exponent
 }
 
 fn calculate_class_probability(uniq_classes: &Vec<String>, all_classes: &Vec<String>) -> HashMap<String, f64> {
@@ -340,5 +388,26 @@ mod calculation_functions_tests {
         let feature_probabilities = calculate_feature_probability(&x, &y, &uniq_classes);
 
         assert!(feature_probabilities.is_empty());
+    }
+
+    #[test]
+    fn test_calculate_mean() {
+        let data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        assert_eq!(calculate_mean(&data), 3.0);
+    }
+
+    #[test]
+    fn test_calculate_std_dev() {
+        let data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let mean = calculate_mean(&data);
+        assert_eq!((calculate_std_dev(&data, mean) - 1.414213).abs() < 0.00001, true);
+    }
+
+    #[test]
+    fn test_calculate_probability() {
+        let x = 2.0;
+        let mean = 2.0;
+        let std_dev = 1.0;
+        assert_eq!((calculate_probability(x, mean, std_dev) - 0.398942).abs() < 0.00001, true);
     }
 }

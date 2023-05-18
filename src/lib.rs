@@ -14,10 +14,10 @@ pub mod naive_bayes;
 
 #[cfg(test)]
 mod naive_bayes_tests {
-    use super::naive_bayes::StdNaiveBayes;
+    use super::naive_bayes::*;
 
     #[test]
-    fn test_fit() {
+    fn test_fit_std() {
         let mut model = StdNaiveBayes::new(1.0);
 
         let x: Vec<Vec<f64>> = vec![
@@ -39,7 +39,7 @@ mod naive_bayes_tests {
     }
 
     #[test]
-    fn test_predict() {
+    fn test_predict_std() {
         let mut model = StdNaiveBayes::new(1.0);
 
         let x: Vec<Vec<f64>> = vec![
@@ -70,6 +70,72 @@ mod naive_bayes_tests {
         assert_eq!(predictions, vec!["class1", "class2"]);
     }
 
+    #[test]
+    fn test_new_gaus() {
+        let model: GaussianNaiveBayes = GaussianNaiveBayes::new();
+
+        assert_eq!(model.classes.len(), 0);
+        assert_eq!(model.probability_of_class.len(), 0);
+        assert_eq!(model.probability_of_feat_by_class.len(), 0);
+    }
+
+    #[test]
+    fn test_fit_gaus() {
+        let mut model: GaussianNaiveBayes = GaussianNaiveBayes::new();
+        let x = vec![
+            vec![2.0, 1.0],
+            vec![3.0, 2.0],
+            vec![2.5, 1.5],
+            vec![4.0, 3.0]
+        ];
+        let y = vec![
+            "class1".to_string(),
+            "class1".to_string(),
+            "class2".to_string(),
+            "class2".to_string()
+        ];
+        let model = model.fit(&x, &y);
+
+        assert_eq!(model.classes.len(), 2);
+        assert!(model.classes.contains(&"class1".to_string()));
+        assert!(model.classes.contains(&"class2".to_string()));
+
+        assert_eq!(model.probability_of_class.len(), 2);
+        assert!(model.probability_of_class.contains_key(&"class1".to_string()));
+        assert!(model.probability_of_class.contains_key(&"class2".to_string()));
+
+        assert_eq!(model.probability_of_feat_by_class.len(), 2);
+        assert!(model.probability_of_feat_by_class.contains_key(&"class1".to_string()));
+        assert!(model.probability_of_feat_by_class.contains_key(&"class2".to_string()));
+    }
+
+    #[test]
+    fn test_predict_gaus() {
+        let mut model: GaussianNaiveBayes = GaussianNaiveBayes::new();
+        let x = vec![
+            vec![2.0, 1.0],
+            vec![3.0, 2.0],
+            vec![2.5, 1.5],
+            vec![4.0, 3.0]
+        ];
+        let y = vec![
+            "class1".to_string(),
+            "class1".to_string(),
+            "class2".to_string(),
+            "class2".to_string()
+        ];
+        let model = model.fit(&x, &y);
+
+        let x_test = vec![
+            vec![2.0, 1.0],
+            vec![4.0, 3.0]
+        ];
+
+        let predictions = model.predict(&x_test);
+        assert_eq!(predictions.len(), x_test.len());
+        assert_eq!(predictions[0], "class1");
+        assert_eq!(predictions[1], "class2");
+    }
 }
 
 #[cfg(test)]
