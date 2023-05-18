@@ -156,7 +156,62 @@ impl StdNaiveBayes<Fit> {
     }
 }
 
-
+/// The `GaussianNaiveBayes` struct represents a Gaussian Naive Bayes classifier.
+///
+/// A Gaussian Naive Bayes classifier is a type of probabilistic machine learning model
+/// used for classification tasks. The Gaussian version assumes the features that it is
+/// learning from are distributed normally.
+///
+/// This struct has two possible states: `Unfit` and `Fit`. An `Unfit` model is one
+/// that has not yet been trained on data, while a `Fit` model has been trained and
+/// can be used for making predictions.
+///
+/// # Fields
+///
+/// * `classes` - A vector of unique class labels (targets) that the model may predict.
+///
+/// * `probability_of_class` - A hashmap where keys are the class labels and the values
+///   are the corresponding prior probabilities of each class.
+///
+/// * `probability_of_feat_by_class` - A hashmap where keys are the class labels and
+///   the values are vectors of tuples. Each tuple represents the mean and standard
+///   deviation of a particular feature for that class.
+///
+/// * `state` - A marker for the model's state. This is either `Unfit` (for a newly
+///   instantiated model) or `Fit` (for a model that has been trained on data).
+///
+/// # Examples
+///
+/// ```
+/// use std::collections::HashMap;
+/// use ducky_learn::naive_bayes::GaussianNaiveBayes;
+///
+/// let model = GaussianNaiveBayes::new();
+///
+/// let x_train: Vec<Vec<f64>> = vec![
+///     vec![1.0, 2.0],
+///     vec![2.0, 3.0],
+///     vec![3.0, 4.0],
+///     vec![4.0, 5.0],
+/// ];
+/// let y_train: Vec<String> = vec![
+///     "class1".to_string(),
+///     "class2".to_string(),
+///     "class1".to_string(),
+///     "class2".to_string(),
+/// ];
+///
+/// let model = model.fit(&x_train, &y_train);
+///
+/// let x_test: Vec<Vec<f64>> = vec![
+///     vec![1.5, 2.5],
+///     vec![3.5, 4.5],
+/// ];
+///
+/// let predictions = model.predict(&x_test);
+///
+/// println!("{:?}", predictions);
+/// ```
 pub struct GaussianNaiveBayes<State = Unfit> {
     pub classes: Vec<String>,
     pub probability_of_class: HashMap<String, f64>,
@@ -166,6 +221,18 @@ pub struct GaussianNaiveBayes<State = Unfit> {
 }
 
 impl GaussianNaiveBayes {
+    /// Creates a new `GaussianNaiveBayes` instance with an `Unfit` state.
+    ///
+    /// # Returns
+    ///
+    /// * `Self` - A new instance of `GaussianNaiveBayes`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ducky_learn::naive_bayes::GaussianNaiveBayes;
+    /// let model = GaussianNaiveBayes::new();
+    /// ```
     pub fn new() -> Self {
         Self {
             classes: Default::default(),
@@ -176,6 +243,42 @@ impl GaussianNaiveBayes {
         }
     }
 
+    /// Fits the model on the provided dataset, updating the model's state to `Fit`.
+    ///
+    /// # Arguments
+    ///
+    /// * `x` - A reference to a vector of vectors, where each inner vector represents
+    ///   the features of a data point.
+    ///
+    /// * `y` - A reference to a vector of class labels for each data point in `x`.
+    ///
+    /// # Returns
+    ///
+    /// * `GaussianNaiveBayes<Fit>` - The same model instance with updated fields
+    ///   and state set to `Fit`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ducky_learn::naive_bayes::GaussianNaiveBayes;
+    ///
+    /// let model = GaussianNaiveBayes::new();
+    ///
+    /// let x_train: Vec<Vec<f64>> = vec![
+    ///     vec![1.0, 2.0],
+    ///     vec![2.0, 3.0],
+    ///     vec![3.0, 4.0],
+    ///     vec![4.0, 5.0],
+    /// ];
+    /// let y_train: Vec<String> = vec![
+    ///     "class1".to_string(),
+    ///     "class2".to_string(),
+    ///     "class1".to_string(),
+    ///     "class2".to_string(),
+    /// ];
+    ///
+    /// let model = model.fit(&x_train, &y_train);
+    /// ```
     pub fn fit(mut self, x: &Vec<Vec<f64>>, y: &Vec<String>) -> GaussianNaiveBayes<Fit> {
         let uniq_classes: Vec<String> = y.clone()
             .into_iter().collect::<HashSet<String>>()
@@ -192,6 +295,36 @@ impl GaussianNaiveBayes {
 }
 
 impl GaussianNaiveBayes<Fit> {
+    /// Predicts the class of the provided data points.
+    ///
+    /// # Arguments
+    ///
+    /// * `x` - A reference to a vector of vectors, where each inner vector represents
+    ///   the features of a data point.
+    ///
+    /// # Returns
+    ///
+    /// * `Vec<String>` - A vector of predicted class labels for each data point in `x`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ducky_learn::naive_bayes::GaussianNaiveBayes;
+    ///
+    /// let model = GaussianNaiveBayes::new().fit(
+    ///     &vec![vec![0.1, 0.5], vec![0.6, 0.6]],
+    ///     &vec!["class1".to_string(), "class2".to_string()]
+    /// );
+    ///
+    /// let x_test: Vec<Vec<f64>> = vec![
+    ///     vec![1.5, 2.5],
+    ///     vec![3.5, 4.5],
+    /// ];
+    ///
+    /// let predictions = model.predict(&x_test);
+    ///
+    /// println!("{:?}", predictions);
+    /// ```
     pub fn predict(&self, x: &Vec<Vec<f64>>) -> Vec<String> {
         let mut predictions: Vec<String> = Vec::new();
 
