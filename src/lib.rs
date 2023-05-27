@@ -4,15 +4,15 @@
 
 extern crate ndarray;
 
-mod activations;
-mod cost;
-mod layers;
-mod optimizers;
-mod train;
+pub mod activations;
+pub mod cost;
+pub mod layers;
+pub mod optimizers;
+pub mod train;
 
-pub mod util;
-pub mod naive_bayes;
 pub mod feature_extraction;
+pub mod naive_bayes;
+pub mod util;
 
 #[cfg(test)]
 mod naive_bayes_tests {
@@ -36,8 +36,8 @@ mod naive_bayes_tests {
 
         let model = model.fit(&x, &y);
 
-        assert!((model.probability_of_class.get("class1").unwrap() - 2.0/3.0).abs() < 1e-9);
-        assert!((model.probability_of_class.get("class2").unwrap() - 1.0/3.0).abs() < 1e-9);
+        assert!((model.probability_of_class.get("class1").unwrap() - 2.0 / 3.0).abs() < 1e-9);
+        assert!((model.probability_of_class.get("class2").unwrap() - 1.0 / 3.0).abs() < 1e-9);
     }
 
     #[test]
@@ -62,10 +62,8 @@ mod naive_bayes_tests {
 
         let model = model.fit(&x, &y);
 
-        let x_test: Vec<Vec<f64>> = vec![
-            vec![1.5, 2.5, 3.5, 1.5, 2.5],
-            vec![5.5, 4.5, 5.5, 4.5, 4.5],
-        ];
+        let x_test: Vec<Vec<f64>> =
+            vec![vec![1.5, 2.5, 3.5, 1.5, 2.5], vec![5.5, 4.5, 5.5, 4.5, 4.5]];
 
         let predictions = model.predict(&x_test);
 
@@ -88,13 +86,13 @@ mod naive_bayes_tests {
             vec![2.0, 1.0],
             vec![3.0, 2.0],
             vec![2.5, 1.5],
-            vec![4.0, 3.0]
+            vec![4.0, 3.0],
         ];
         let y = vec![
             "class1".to_string(),
             "class1".to_string(),
             "class2".to_string(),
-            "class2".to_string()
+            "class2".to_string(),
         ];
         let model = model.fit(&x, &y);
 
@@ -103,12 +101,20 @@ mod naive_bayes_tests {
         assert!(model.classes.contains(&"class2".to_string()));
 
         assert_eq!(model.probability_of_class.len(), 2);
-        assert!(model.probability_of_class.contains_key(&"class1".to_string()));
-        assert!(model.probability_of_class.contains_key(&"class2".to_string()));
+        assert!(model
+            .probability_of_class
+            .contains_key(&"class1".to_string()));
+        assert!(model
+            .probability_of_class
+            .contains_key(&"class2".to_string()));
 
         assert_eq!(model.probability_of_feat_by_class.len(), 2);
-        assert!(model.probability_of_feat_by_class.contains_key(&"class1".to_string()));
-        assert!(model.probability_of_feat_by_class.contains_key(&"class2".to_string()));
+        assert!(model
+            .probability_of_feat_by_class
+            .contains_key(&"class1".to_string()));
+        assert!(model
+            .probability_of_feat_by_class
+            .contains_key(&"class2".to_string()));
     }
 
     #[test]
@@ -118,20 +124,17 @@ mod naive_bayes_tests {
             vec![2.0, 1.0],
             vec![3.0, 2.0],
             vec![2.5, 1.5],
-            vec![4.0, 3.0]
+            vec![4.0, 3.0],
         ];
         let y = vec![
             "class1".to_string(),
             "class1".to_string(),
             "class2".to_string(),
-            "class2".to_string()
+            "class2".to_string(),
         ];
         let model = model.fit(&x, &y);
 
-        let x_test = vec![
-            vec![2.0, 1.0],
-            vec![4.0, 3.0]
-        ];
+        let x_test = vec![vec![2.0, 1.0], vec![4.0, 3.0]];
 
         let predictions = model.predict(&x_test);
         assert_eq!(predictions.len(), x_test.len());
@@ -216,8 +219,8 @@ mod layers_tests {
 #[cfg(test)]
 mod util_tests {
     use super::util::*;
-    use ndarray::Array2;
     use ndarray::array;
+    use ndarray::Array2;
 
     #[test]
     fn test_empty() {
@@ -243,7 +246,6 @@ mod util_tests {
         ];
         assert_eq!(one_hot_encoding_vec(input).unwrap(), expected);
     }
-
 }
 
 #[cfg(test)]

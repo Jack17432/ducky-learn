@@ -1,5 +1,5 @@
-use std::collections::{HashMap, HashSet};
 use super::util::{Fit, Unfit};
+use std::collections::{HashMap, HashSet};
 
 /// Implementation of a standard Naive Bayes classifier.
 ///
@@ -48,7 +48,6 @@ pub struct StdNaiveBayes<State = Unfit> {
 }
 
 impl StdNaiveBayes {
-
     /// Constructs a new, unfitted `StdNaiveBayes` classifier with a specified alpha value.
     ///
     /// # Parameters
@@ -85,7 +84,10 @@ impl StdNaiveBayes {
         let unique_classes: HashSet<String> = y.into_iter().cloned().collect();
 
         for uniq_class in &unique_classes {
-            self.probability_of_class.insert(uniq_class.to_string(), *y_counts.get(uniq_class).unwrap() as f64 / total_rows);
+            self.probability_of_class.insert(
+                uniq_class.to_string(),
+                *y_counts.get(uniq_class).unwrap() as f64 / total_rows,
+            );
 
             let mut class_feat_probs: HashMap<String, f64> = HashMap::new();
             let mut sum_of_feats_in_class = 0.0;
@@ -104,10 +106,11 @@ impl StdNaiveBayes {
                 *count = (*count + self.alpha) / sum_of_feats_in_class;
             }
 
-            self.probability_of_feat_by_class.insert(uniq_class.to_string(), class_feat_probs);
+            self.probability_of_feat_by_class
+                .insert(uniq_class.to_string(), class_feat_probs);
         }
 
-        StdNaiveBayes{
+        StdNaiveBayes {
             alpha: self.alpha,
             probability_of_class: self.probability_of_class.clone(),
             probability_of_feat_by_class: self.probability_of_feat_by_class.clone(),
@@ -118,7 +121,6 @@ impl StdNaiveBayes {
 }
 
 impl StdNaiveBayes<Fit> {
-
     /// Predicts the target values for the given data.
     ///
     /// # Parameters
@@ -141,14 +143,24 @@ impl StdNaiveBayes<Fit> {
                 let mut log_sum = (class_probabilities[i] + small_number).ln();
                 for (j, feat_count) in row.iter().enumerate() {
                     if *feat_count > 0.0 {
-                        let prob = self.probability_of_feat_by_class.get(class).unwrap().get(&j.to_string()).unwrap();
+                        let prob = self
+                            .probability_of_feat_by_class
+                            .get(class)
+                            .unwrap()
+                            .get(&j.to_string())
+                            .unwrap();
                         log_sum += (*feat_count * (*prob + small_number).ln());
                     }
                 }
                 row_probabilities.push(log_sum);
             }
 
-            let max_prob_index = row_probabilities.iter().enumerate().max_by(|a, b| a.1.partial_cmp(b.1).unwrap()).unwrap().0;
+            let max_prob_index = row_probabilities
+                .iter()
+                .enumerate()
+                .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
+                .unwrap()
+                .0;
             y_pred.push(unique_classes[max_prob_index].to_string());
         }
 
@@ -280,11 +292,14 @@ impl GaussianNaiveBayes {
     /// let model = model.fit(&x_train, &y_train);
     /// ```
     pub fn fit(mut self, x: &Vec<Vec<f64>>, y: &Vec<String>) -> GaussianNaiveBayes<Fit> {
-        let uniq_classes: Vec<String> = y.clone()
-            .into_iter().collect::<HashSet<String>>()
-            .into_iter().collect::<Vec<String>>();
+        let uniq_classes: Vec<String> = y
+            .clone()
+            .into_iter()
+            .collect::<HashSet<String>>()
+            .into_iter()
+            .collect::<Vec<String>>();
 
-        GaussianNaiveBayes{
+        GaussianNaiveBayes {
             probability_of_class: calculate_class_probability(&uniq_classes, y),
             probability_of_feat_by_class: calculate_feature_probability(x, y, &uniq_classes),
             classes: uniq_classes,
@@ -361,10 +376,14 @@ fn calculate_mean(data: &Vec<f64>) -> f64 {
 }
 
 fn calculate_std_dev(data: &Vec<f64>, mean: f64) -> f64 {
-    let variance: f64 = data.iter().map(|&value| {
-        let diff = value - mean;
-        diff * diff
-    }).sum::<f64>() / data.len() as f64;
+    let variance: f64 = data
+        .iter()
+        .map(|&value| {
+            let diff = value - mean;
+            diff * diff
+        })
+        .sum::<f64>()
+        / data.len() as f64;
 
     variance.sqrt()
 }
@@ -374,7 +393,10 @@ fn calculate_probability(x: f64, mean: f64, std_dev: f64) -> f64 {
     (1.0 / (2.0 * std::f64::consts::PI * std_dev.powi(2)).sqrt()) * exponent
 }
 
-fn calculate_class_probability(uniq_classes: &Vec<String>, all_classes: &Vec<String>) -> HashMap<String, f64> {
+fn calculate_class_probability(
+    uniq_classes: &Vec<String>,
+    all_classes: &Vec<String>,
+) -> HashMap<String, f64> {
     let mut class_probability: HashMap<String, f64> = HashMap::new();
     let total = all_classes.len() as f64;
 
@@ -386,13 +408,20 @@ fn calculate_class_probability(uniq_classes: &Vec<String>, all_classes: &Vec<Str
     }
 
     // For each unique class, compute and store the probability
-    uniq_classes.iter().map(|class| {
-        let count = *class_counts.get(class).unwrap_or(&0.0);
-        (class.clone(), count / total)
-    }).collect()
+    uniq_classes
+        .iter()
+        .map(|class| {
+            let count = *class_counts.get(class).unwrap_or(&0.0);
+            (class.clone(), count / total)
+        })
+        .collect()
 }
 
-fn calculate_feature_probability(x: &Vec<Vec<f64>>, y: &Vec<String>, uniq_classes: &Vec<String>) -> HashMap<String, Vec<(f64, f64)>> {
+fn calculate_feature_probability(
+    x: &Vec<Vec<f64>>,
+    y: &Vec<String>,
+    uniq_classes: &Vec<String>,
+) -> HashMap<String, Vec<(f64, f64)>> {
     let mut return_feature_prob: HashMap<String, Vec<(f64, f64)>> = HashMap::new();
 
     if x.len() != y.len() {
@@ -400,8 +429,10 @@ fn calculate_feature_probability(x: &Vec<Vec<f64>>, y: &Vec<String>, uniq_classe
     }
 
     for class in uniq_classes {
-        let x_class: Vec<_> = x.iter().zip(y)
-            .filter_map(|(x, y)| if y == class {Some(x.clone())} else {None})
+        let x_class: Vec<_> = x
+            .iter()
+            .zip(y)
+            .filter_map(|(x, y)| if y == class { Some(x.clone()) } else { None })
             .collect();
 
         if x_class.is_empty() {
@@ -417,14 +448,21 @@ fn calculate_feature_probability(x: &Vec<Vec<f64>>, y: &Vec<String>, uniq_classe
             let mean: f64 = feature_values.iter().sum::<f64>() / feature_values.len() as f64;
 
             // calculate the standard deviation
-            let variance: f64 = feature_values.iter().map(|value| {
-                let diff = mean - *value;
-                diff * diff
-            }).sum::<f64>() / feature_values.len() as f64;
+            let variance: f64 = feature_values
+                .iter()
+                .map(|value| {
+                    let diff = mean - *value;
+                    diff * diff
+                })
+                .sum::<f64>()
+                / feature_values.len() as f64;
 
             let std_dev = variance.sqrt();
 
-            return_feature_prob.entry(class.to_string()).or_insert_with(|| Vec::with_capacity(num_features)).push((mean, std_dev));
+            return_feature_prob
+                .entry(class.to_string())
+                .or_insert_with(|| Vec::with_capacity(num_features))
+                .push((mean, std_dev));
         }
     }
 
@@ -437,21 +475,41 @@ mod calculation_functions_tests {
 
     #[test]
     fn test_calculate_class_probability() {
-        let uniq_classes = vec!["class1".to_string(), "class2".to_string(), "class3".to_string()];
-        let all_classes = vec!["class1".to_string(), "class2".to_string(), "class2".to_string(),
-                               "class3".to_string(), "class3".to_string(), "class3".to_string()];
+        let uniq_classes = vec![
+            "class1".to_string(),
+            "class2".to_string(),
+            "class3".to_string(),
+        ];
+        let all_classes = vec![
+            "class1".to_string(),
+            "class2".to_string(),
+            "class2".to_string(),
+            "class3".to_string(),
+            "class3".to_string(),
+            "class3".to_string(),
+        ];
         let probabilities = calculate_class_probability(&uniq_classes, &all_classes);
 
-        assert!(probabilities.get("class1").unwrap() - (1.0/6.0) < f64::EPSILON);
-        assert!(probabilities.get("class2").unwrap() - (2.0/6.0) < f64::EPSILON);
-        assert!(probabilities.get("class3").unwrap() - (3.0/6.0) < f64::EPSILON);
+        assert!(probabilities.get("class1").unwrap() - (1.0 / 6.0) < f64::EPSILON);
+        assert!(probabilities.get("class2").unwrap() - (2.0 / 6.0) < f64::EPSILON);
+        assert!(probabilities.get("class3").unwrap() - (3.0 / 6.0) < f64::EPSILON);
     }
 
     #[test]
     fn test_calculate_class_probability_sum_to_one() {
-        let uniq_classes = vec!["class1".to_string(), "class2".to_string(), "class3".to_string()];
-        let all_classes = vec!["class1".to_string(), "class2".to_string(), "class2".to_string(),
-                               "class3".to_string(), "class3".to_string(), "class3".to_string()];
+        let uniq_classes = vec![
+            "class1".to_string(),
+            "class2".to_string(),
+            "class3".to_string(),
+        ];
+        let all_classes = vec![
+            "class1".to_string(),
+            "class2".to_string(),
+            "class2".to_string(),
+            "class3".to_string(),
+            "class3".to_string(),
+            "class3".to_string(),
+        ];
         let probabilities = calculate_class_probability(&uniq_classes, &all_classes);
 
         let sum: f64 = probabilities.values().sum();
@@ -462,8 +520,18 @@ mod calculation_functions_tests {
     #[test]
     fn test_calculate_feature_probability() {
         let uniq_classes = vec!["class1".to_string(), "class2".to_string()];
-        let y = vec!["class1".to_string(), "class2".to_string(), "class1".to_string(), "class2".to_string()];
-        let x = vec![vec![1.0, 2.0], vec![2.0, 2.0], vec![2.0, 3.0], vec![3.0, 3.0]];
+        let y = vec![
+            "class1".to_string(),
+            "class2".to_string(),
+            "class1".to_string(),
+            "class2".to_string(),
+        ];
+        let x = vec![
+            vec![1.0, 2.0],
+            vec![2.0, 2.0],
+            vec![2.0, 3.0],
+            vec![3.0, 3.0],
+        ];
 
         let feature_probabilities = calculate_feature_probability(&x, &y, &uniq_classes);
 
@@ -494,8 +562,18 @@ mod calculation_functions_tests {
     #[test]
     fn test_calculate_feature_probability_same_feature_values() {
         let uniq_classes = vec!["class1".to_string(), "class2".to_string()];
-        let y = vec!["class1".to_string(), "class1".to_string(), "class2".to_string(), "class2".to_string()];
-        let x = vec![vec![2.0, 2.0], vec![2.0, 2.0], vec![2.0, 2.0], vec![2.0, 2.0]];
+        let y = vec![
+            "class1".to_string(),
+            "class1".to_string(),
+            "class2".to_string(),
+            "class2".to_string(),
+        ];
+        let x = vec![
+            vec![2.0, 2.0],
+            vec![2.0, 2.0],
+            vec![2.0, 2.0],
+            vec![2.0, 2.0],
+        ];
 
         let feature_probabilities = calculate_feature_probability(&x, &y, &uniq_classes);
 
@@ -533,7 +611,10 @@ mod calculation_functions_tests {
     fn test_calculate_std_dev() {
         let data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let mean = calculate_mean(&data);
-        assert_eq!((calculate_std_dev(&data, mean) - 1.414213).abs() < 0.00001, true);
+        assert_eq!(
+            (calculate_std_dev(&data, mean) - 1.414213).abs() < 0.00001,
+            true
+        );
     }
 
     #[test]
@@ -541,6 +622,9 @@ mod calculation_functions_tests {
         let x = 2.0;
         let mean = 2.0;
         let std_dev = 1.0;
-        assert_eq!((calculate_probability(x, mean, std_dev) - 0.398942).abs() < 0.00001, true);
+        assert_eq!(
+            (calculate_probability(x, mean, std_dev) - 0.398942).abs() < 0.00001,
+            true
+        );
     }
 }

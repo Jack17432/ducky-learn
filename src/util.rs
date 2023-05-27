@@ -36,7 +36,9 @@ pub struct Fit;
 ///
 /// assert_eq!(one_hot_encoding_vec(input_array).unwrap(), output_array);
 /// ```
-pub fn one_hot_encoding_vec<T: AsRef<[usize]>>(input_array: T) -> Result<Array2<f64>, Box<dyn Error>> {
+pub fn one_hot_encoding_vec<T: AsRef<[usize]>>(
+    input_array: T,
+) -> Result<Array2<f64>, Box<dyn Error>> {
     let input_array = input_array.as_ref();
     let max_val = match input_array.iter().max() {
         Some(&max) => max + 1,
