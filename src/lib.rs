@@ -4,13 +4,15 @@
 
 extern crate ndarray;
 
-pub mod activations;
-pub mod cost;
-pub mod layers;
-pub mod optimizers;
-pub mod train;
+mod activations;
+mod cost;
+mod layers;
+mod optimizers;
+mod train;
+
 pub mod util;
 pub mod naive_bayes;
+pub mod feature_extraction;
 
 #[cfg(test)]
 mod naive_bayes_tests {

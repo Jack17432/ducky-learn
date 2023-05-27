@@ -57,4 +57,3 @@ pub fn one_hot_encoding_vec<T: AsRef<[usize]>>(input_array: T) -> Result<Array2<
 
     Array2::from_shape_vec((n_row, n_col), data).map_err(|err| err.into())
 }
-
