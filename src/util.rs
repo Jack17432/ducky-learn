@@ -36,7 +36,9 @@ pub struct Fit;
 ///
 /// assert_eq!(one_hot_encoding_vec(input_array).unwrap(), output_array);
 /// ```
-pub fn one_hot_encoding_vec<T: AsRef<[usize]>>(input_array: T) -> Result<Array2<f64>, Box<dyn Error>> {
+pub fn one_hot_encoding_vec<T: AsRef<[usize]>>(
+    input_array: T,
+) -> Result<Array2<f64>, Box<dyn Error>> {
     let input_array = input_array.as_ref();
     let max_val = match input_array.iter().max() {
         Some(&max) => max + 1,
@@ -58,3 +60,34 @@ pub fn one_hot_encoding_vec<T: AsRef<[usize]>>(input_array: T) -> Result<Array2<
     Array2::from_shape_vec((n_row, n_col), data).map_err(|err| err.into())
 }
 
+#[cfg(test)]
+mod util_tests {
+    use super::*;
+    use ndarray::array;
+    use ndarray::Array2;
+
+    #[test]
+    fn test_empty() {
+        let input: Vec<usize> = vec![];
+        assert!(one_hot_encoding_vec(input).is_err());
+    }
+
+    #[test]
+    fn test_single_element() {
+        let input: Vec<usize> = vec![0];
+        let expected: Array2<f64> = array![[1.]];
+        assert_eq!(one_hot_encoding_vec(input).unwrap(), expected);
+    }
+
+    #[test]
+    fn test_multiple_elements() {
+        let input: Vec<usize> = vec![0, 2, 1, 3];
+        let expected: Array2<f64> = array![
+            [1., 0., 0., 0.],
+            [0., 0., 1., 0.],
+            [0., 1., 0., 0.],
+            [0., 0., 0., 1.]
+        ];
+        assert_eq!(one_hot_encoding_vec(input).unwrap(), expected);
+    }
+}

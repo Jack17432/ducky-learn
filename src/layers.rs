@@ -140,3 +140,77 @@ impl Layer1d for Dense1d {
         (z, a)
     }
 }
+
+
+#[cfg(test)]
+mod layers_tests {
+    use super::*;
+    use ndarray::*;
+    use crate::activations::*;
+
+    #[test]
+    fn dense1d_pass_arr1_1() {
+        let layer = Dense1d::from(
+            |x| x,
+            |x| x,
+            arr2(&[[1., 1., 1.], [1., 1., 1.], [1., 1., 1.]]),
+            arr1(&[1., 1., 1.]),
+        );
+        let input_array = arr1(&[1., 1., 1.]);
+
+        assert_eq!(layer.pass(input_array).1, arr1(&[4., 4., 4.]))
+    }
+
+    #[test]
+    fn dense1d_pass_arr1_2() {
+        let layer = Dense1d::from(
+            |x| x,
+            |x| x,
+            arr2(&[
+                [1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.],
+                [1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.],
+                [1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.],
+            ]),
+            arr1(&[1., 1., 1.]),
+        );
+        let input_array = arr1(&[1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.]);
+
+        assert_eq!(layer.pass(input_array).1, arr1(&[13.0, 13.0, 13.0]))
+    }
+
+    #[test]
+    #[should_panic]
+    fn dense1d_pass_arr1_diff_size() {
+        let layer = Dense1d::from(
+            |x| x,
+            |x| x,
+            arr2(&[[1., 1., 1., 1.], [1., 1., 1., 1.]]),
+            arr1(&[0., 0.]),
+        );
+        let input_array = arr1(&[1.]);
+
+        layer.pass(input_array);
+    }
+
+    #[test]
+    fn dense1d_new() {
+        let layer = Dense1d::new(5, 10, |x| x, |x| x);
+
+        let input_array = arr1(&[1., 1., 1., 1., 1.]);
+
+        layer.pass(input_array);
+    }
+
+    #[test]
+    fn dense1d_activation() {
+        let layer = Dense1d::from(
+            relu_1d,
+            deriv_relu_1d,
+            arr2(&[[1., 1., 1.], [1., 1., 1.], [1., 1., 1.]]),
+            arr1(&[-10., -10., 1.]),
+        );
+        let input_array = arr1(&[1., 1., 1.]);
+
+        assert_eq!(layer.pass(input_array).1, arr1(&[0., 0., 4.]))
+    }
+}
