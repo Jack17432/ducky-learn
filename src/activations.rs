@@ -72,3 +72,81 @@ pub fn softmax_1d(input_array: Array1<f64>) -> Array1<f64> {
 
     input_array.map(|value| value.exp() / sum_exp_input_array)
 }
+
+#[cfg(test)]
+mod activations_tests {
+    use super::*;
+    use ndarray::arr1;
+
+    #[test]
+    fn relu_1d_1() {
+        let input_array = arr1(&[0., 1., -1., 0.01, -0.1]);
+
+        assert_eq!(relu_1d(input_array), arr1(&[0., 1., 0., 0.01, 0.]));
+    }
+
+    #[test]
+    fn relu_1d_2() {
+        let input_array = arr1(&[]);
+
+        assert_eq!(relu_1d(input_array), arr1(&[]));
+    }
+
+    #[test]
+    fn relu_1d_3() {
+        let input_array = arr1(&[-1.3456435325242, -32145324321., -132432888.]);
+
+        assert_eq!(relu_1d(input_array), arr1(&[0., 0., 0.]));
+    }
+
+    #[test]
+    fn deriv_relu_1d_1() {
+        let input_array = arr1(&[1.3456435325242, -32145324321., 132432888.]);
+        assert_eq!(deriv_relu_1d(input_array), arr1(&[1., 0., 1.]));
+    }
+
+    #[test]
+    fn deriv_relu_1d_2() {
+        let input_array = arr1(&[-1.3456435325242, -32145324321., 132432888.]);
+        assert_eq!(deriv_relu_1d(input_array), arr1(&[0., 0., 1.]));
+    }
+
+    #[test]
+    fn deriv_relu_1d_3() {
+        let input_array = arr1(&[]);
+        assert_eq!(deriv_relu_1d(input_array), arr1(&[]));
+    }
+
+    #[test]
+    fn softmax_1d_1() {
+        let input_array = arr1(&[0., 1., -1., 0.01, -0.1]);
+
+        assert_eq!(
+            softmax_1d(input_array),
+            arr1(&[
+                0.16663753690463112,
+                0.4529677885070323,
+                0.0613025239546613,
+                0.16831227199301688,
+                0.15077987864065834
+            ])
+        );
+    }
+
+    #[test]
+    fn softmax_1d_2() {
+        let input_array = arr1(&[]);
+
+        assert_eq!(softmax_1d(input_array), arr1(&[]));
+    }
+
+    #[test]
+    fn softmax_1d_3() {
+        let input_array = arr1(&[-0.3456435325242, 232., -888.]);
+
+        assert_eq!(
+            softmax_1d(input_array),
+            arr1(&[1.2404210269803915e-101, 1.0, 0.0])
+        );
+    }
+}
